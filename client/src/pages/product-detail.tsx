@@ -107,7 +107,7 @@ export default function ProductDetail() {
                 <div className="flex items-center mb-4">
                   <StarRating rating={product.averageRating} size="lg" />
                   <span className="ml-3 text-gray-600">
-                    {product.averageRating.toFixed(1)} ({product.reviewCount} review{product.reviewCount !== 1 ? 's' : ''})
+                    {product.averageRating ? product.averageRating.toFixed(1) : '0.0'} ({product.reviewCount} review{product.reviewCount !== 1 ? 's' : ''})
                   </span>
                 </div>
                 <p className="text-3xl font-bold text-primary mb-6">${product.price}</p>
