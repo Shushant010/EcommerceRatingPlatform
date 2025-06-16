@@ -78,11 +78,69 @@ export async function seedDatabase() {
   try {
     console.log("Seeding database with sample products...");
     
+    // First create products
+    const createdProducts = [];
     for (const product of sampleProducts) {
-      await storage.createProduct(product);
+      try {
+        const createdProduct = await storage.createProduct(product);
+        createdProducts.push(createdProduct);
+      } catch (error) {
+        // Product might already exist, try to get it
+        const existingProducts = await storage.getAllProducts();
+        const existing = existingProducts.find(p => p.name === product.name);
+        if (existing) {
+          createdProducts.push(existing);
+        }
+      }
+    }
+
+    // Create sample users
+    const sampleUsers = [
+      { username: "john_reviewer", email: "john@example.com", password: "password123" },
+      { username: "sarah_buyer", email: "sarah@example.com", password: "password123" },
+      { username: "mike_tech", email: "mike@example.com", password: "password123" },
+      { username: "lisa_shopper", email: "lisa@example.com", password: "password123" },
+      { username: "david_user", email: "david@example.com", password: "password123" }
+    ];
+
+    const createdUsers = [];
+    for (const user of sampleUsers) {
+      try {
+        const createdUser = await storage.createUser(user);
+        createdUsers.push(createdUser);
+      } catch (error) {
+        // User might already exist, try to get them
+        const existingUser = await storage.getUserByEmail(user.email);
+        if (existingUser) {
+          createdUsers.push(existingUser);
+        }
+      }
+    }
+
+    // Create sample reviews
+    const sampleReviews = [
+      { userId: 1, productId: 1, rating: 5, title: "Amazing sound quality!", content: "These headphones exceeded my expectations. The noise cancellation is fantastic and the battery life is exactly as advertised. Highly recommend for anyone looking for premium audio experience." },
+      { userId: 2, productId: 1, rating: 4, title: "Great headphones, minor issues", content: "Overall very satisfied with the purchase. Sound quality is excellent, but the headband could be more comfortable for extended use. Still a solid 4-star product." },
+      { userId: 3, productId: 2, rating: 5, title: "Perfect fitness companion", content: "This watch has transformed my workout routine. GPS is accurate, heart rate monitoring is spot on, and the battery easily lasts a full week. Worth every penny!" },
+      { userId: 4, productId: 2, rating: 4, title: "Good fitness tracker", content: "Does everything I need for tracking my workouts and daily activity. The sleep tracking feature is particularly useful. Only wish the screen was slightly larger." },
+      { userId: 1, productId: 3, rating: 5, title: "Excellent laptop for work", content: "Perfect for my development work. Fast processor, plenty of RAM, and the display is crisp and clear. Build quality feels premium and it handles all my programming tasks effortlessly." },
+      { userId: 5, productId: 3, rating: 4, title: "Solid performance laptop", content: "Great laptop for professional use. Fast boot times, excellent keyboard, and runs all my applications smoothly. The only downside is it gets a bit warm during intensive tasks." },
+      { userId: 2, productId: 4, rating: 5, title: "Best smartphone I've owned", content: "The camera quality is incredible, especially for night photos. 5G connectivity is blazing fast and the battery easily lasts all day with heavy usage. Highly recommend!" },
+      { userId: 3, productId: 5, rating: 4, title: "Comfortable gaming chair", content: "Very comfortable for long gaming sessions. The lumbar support is excellent and the adjustability is great. Only minor complaint is assembly took longer than expected." },
+      { userId: 4, productId: 6, rating: 5, title: "Amazing portable speaker", content: "Sound quality is incredible for such a compact size. Waterproof design is perfect for beach trips. Battery life is excellent and Bluetooth connection is very stable." },
+      { userId: 5, productId: 7, rating: 4, title: "Great tablet for creative work", content: "Perfect for digital art and note-taking. The stylus is responsive and the display colors are accurate. Would be 5 stars if it came with the stylus included." }
+    ];
+
+    for (const review of sampleReviews) {
+      try {
+        await storage.createReview(review);
+      } catch (error) {
+        // Review might already exist, skip
+        console.log(`Review already exists for user ${review.userId} and product ${review.productId}`);
+      }
     }
     
-    console.log("Database seeded successfully!");
+    console.log("Database seeded successfully with products, users, and reviews!");
   } catch (error) {
     console.error("Error seeding database:", error);
   }
