@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, type ReactNode } from "react";
 
 interface User {
   id: number;
@@ -14,7 +14,7 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export function AuthProvider({ children }: { children: ReactNode }) {
+export function AuthProvider({ children }: { children: ReactNode }): JSX.Element {
   const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
