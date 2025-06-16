@@ -153,10 +153,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Check if user has reviewed a product
-  app.get("/api/reviews/check/:userId/:productId", async (req, res) => {
+  app.get("/api/reviews/check", async (req, res) => {
     try {
-      const userId = parseInt(req.params.userId);
-      const productId = parseInt(req.params.productId);
+      const userId = parseInt(req.query.userId as string);
+      const productId = parseInt(req.query.productId as string);
       
       if (isNaN(userId) || isNaN(productId)) {
         return res.status(400).json({ message: "Invalid user or product ID" });

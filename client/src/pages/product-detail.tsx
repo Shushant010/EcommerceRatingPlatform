@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { useRoute } from "wouter";
+import { useRoute, useLocation } from "wouter";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { StarRating } from "@/components/star-rating";
@@ -12,6 +12,7 @@ import type { ProductWithReviews } from "@shared/schema";
 
 export default function ProductDetail() {
   const [, params] = useRoute("/product/:id");
+  const [, setLocation] = useLocation();
   const { user } = useAuth();
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
@@ -24,7 +25,7 @@ export default function ProductDetail() {
   });
 
   const { data: hasReviewedData } = useQuery<{ hasReviewed: boolean }>({
-    queryKey: ["/api/reviews/check", user?.id, productId],
+    queryKey: [`/api/reviews/check?userId=${user?.id}&productId=${productId}`],
     enabled: !!user && productId > 0,
   });
 
@@ -70,7 +71,7 @@ export default function ProductDetail() {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-2xl font-bold text-gray-900 mb-4">Product Not Found</h1>
-          <Button onClick={() => window.history.back()}>
+          <Button onClick={() => setLocation("/")}>
             <ArrowLeft className="mr-2 h-4 w-4" />
             Go Back
           </Button>
@@ -84,7 +85,7 @@ export default function ProductDetail() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Button
           variant="ghost"
-          onClick={() => window.history.back()}
+          onClick={() => setLocation("/")}
           className="mb-8"
         >
           <ArrowLeft className="mr-2 h-4 w-4" />

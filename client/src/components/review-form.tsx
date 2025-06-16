@@ -39,7 +39,7 @@ export function ReviewForm({ productId, onSuccess, onCancel }: ReviewFormProps) 
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/products", productId] });
       queryClient.invalidateQueries({ queryKey: ["/api/products"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/reviews/check", user?.id, productId] });
+      queryClient.invalidateQueries({ queryKey: [`/api/reviews/check?userId=${user?.id}&productId=${productId}`] });
       toast({
         title: "Success",
         description: "Review submitted successfully!",
