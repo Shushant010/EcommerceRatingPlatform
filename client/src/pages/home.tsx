@@ -22,8 +22,14 @@ export default function Home() {
   const [showAuthModal, setShowAuthModal] = useState(false);
 
   const { data: products, isLoading } = useQuery<ProductWithStats[]>({
-    queryKey: ["/api/products"],
+    queryKey: ["products"],
+    queryFn: async () => {
+      const res = await fetch("/api/products");
+     if (!res.ok) throw new Error("Failed to fetch products");
+      return (await res.json()) as ProductWithStats[];
+    },
   });
+
 
   return (
     <div className="min-h-screen bg-gray-50">

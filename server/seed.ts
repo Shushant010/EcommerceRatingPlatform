@@ -1,6 +1,7 @@
 import { storage } from "./storage";
 import type { InsertProduct } from "@shared/schema";
 
+
 const sampleProducts: InsertProduct[] = [
   {
     name: "Premium Wireless Headphones",
@@ -74,27 +75,23 @@ const sampleProducts: InsertProduct[] = [
   }
 ];
 
+
+
 export async function seedDatabase() {
   try {
     console.log("Seeding database with sample products...");
-    
-    // First create products
-    const createdProducts = [];
-    for (const product of sampleProducts) {
-      try {
-        const createdProduct = await storage.createProduct(product);
-        createdProducts.push(createdProduct);
-      } catch (error) {
-        // Product might already exist, try to get it
-        const existingProducts = await storage.getAllProducts();
-        const existing = existingProducts.find(p => p.name === product.name);
-        if (existing) {
-          createdProducts.push(existing);
-        }
-      }
-    }
 
-    // Create sample users
+    // Fetch existing products and add only new ones
+    const existingProducts = await storage.getAllProducts();
+    const existingNames = new Set(existingProducts.map(p => p.name));
+    const productsToAdd = sampleProducts.filter(p => !existingNames.has(p.name));
+    for (const p of productsToAdd) {
+      await storage.createProduct(p);
+    }
+    console.log(`${productsToAdd.length} products added (skipped ${sampleProducts.length - productsToAdd.length} duplicates).`);
+
+    // Create sample users if not exist
+    console.log("Seeding database with sample users...");
     const sampleUsers = [
       { username: "john_reviewer", email: "john@example.com", password: "password123" },
       { username: "sarah_buyer", email: "sarah@example.com", password: "password123" },
@@ -102,22 +99,16 @@ export async function seedDatabase() {
       { username: "lisa_shopper", email: "lisa@example.com", password: "password123" },
       { username: "david_user", email: "david@example.com", password: "password123" }
     ];
-
-    const createdUsers = [];
-    for (const user of sampleUsers) {
-      try {
-        const createdUser = await storage.createUser(user);
-        createdUsers.push(createdUser);
-      } catch (error) {
-        // User might already exist, try to get them
-        const existingUser = await storage.getUserByEmail(user.email);
-        if (existingUser) {
-          createdUsers.push(existingUser);
-        }
+    for (const u of sampleUsers) {
+      const existing = await storage.getUserByEmail(u.email);
+      if (!existing) {
+        await storage.createUser(u);
       }
     }
 
-    // Create sample reviews
+    // Create sample reviews (duplicates skipped via error)
+    console.log("Seeding database with sample reviews...");
+   
     const sampleReviews = [
       { userId: 1, productId: 1, rating: 5, title: "Amazing sound quality!", content: "These headphones exceeded my expectations. The noise cancellation is fantastic and the battery life is exactly as advertised. Highly recommend for anyone looking for premium audio experience." },
       { userId: 2, productId: 1, rating: 4, title: "Great headphones, minor issues", content: "Overall very satisfied with the purchase. Sound quality is excellent, but the headband could be more comfortable for extended use. Still a solid 4-star product." },
@@ -130,23 +121,25 @@ export async function seedDatabase() {
       { userId: 4, productId: 6, rating: 5, title: "Amazing portable speaker", content: "Sound quality is incredible for such a compact size. Waterproof design is perfect for beach trips. Battery life is excellent and Bluetooth connection is very stable." },
       { userId: 5, productId: 7, rating: 4, title: "Great tablet for creative work", content: "Perfect for digital art and note-taking. The stylus is responsive and the display colors are accurate. Would be 5 stars if it came with the stylus included." }
     ];
-
-    for (const review of sampleReviews) {
+    
+    for (const r of sampleReviews) {
       try {
-        await storage.createReview(review);
-      } catch (error) {
-        // Review might already exist, skip
-        console.log(`Review already exists for user ${review.userId} and product ${review.productId}`);
+        await storage.createReview(r);
+      } catch {
+        // assume duplicate, skip
       }
     }
-    
-    console.log("Database seeded successfully with products, users, and reviews!");
-  } catch (error) {
-    console.error("Error seeding database:", error);
+
+    console.log("Database seeded successfully (duplicates skipped).");
+  } catch (err) {
+    console.error("Error during seeding:", err);
   }
 }
 
-// Run seeding if this file is executed directly
+// Auto-run when file executed directly
 if (import.meta.url === `file://${process.argv[1]}`) {
   seedDatabase();
 }
+
+
+

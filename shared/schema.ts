@@ -25,9 +25,9 @@ export const reviews = pgTable("reviews", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").references(() => users.id).notNull(),
   productId: integer("product_id").references(() => products.id).notNull(),
-  rating: integer("rating").notNull(),
-  title: text("title").notNull(),
-  content: text("content").notNull(),
+  rating: integer("rating"),
+  title: text("title"),
+  content: text("content"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 }, (table) => ({
   userProductUnique: unique().on(table.userId, table.productId),

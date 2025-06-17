@@ -3,11 +3,10 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { StarRating } from "@/components/star-rating";
+import { Star } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { Star } from "lucide-react";
 
 interface ReviewFormProps {
   productId: number;
@@ -19,7 +18,6 @@ export function ReviewForm({ productId, onSuccess, onCancel }: ReviewFormProps) 
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  
   const [rating, setRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
   const [title, setTitle] = useState("");
@@ -37,13 +35,10 @@ export function ReviewForm({ productId, onSuccess, onCancel }: ReviewFormProps) 
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/products", productId] });
-      queryClient.invalidateQueries({ queryKey: ["/api/products"] });
-      queryClient.invalidateQueries({ queryKey: [`/api/reviews/check?userId=${user?.id}&productId=${productId}`] });
-      toast({
-        title: "Success",
-        description: "Review submitted successfully!",
-      });
+      queryClient.invalidateQueries({ queryKey: ["product", productId] });
+      queryClient.invalidateQueries({ queryKey: ["hasReviewed", user!.id, productId] });
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+      toast({ title: "Success", description: "Review submitted successfully!" });
       onSuccess();
     },
     onError: (error: any) => {
@@ -57,40 +52,44 @@ export function ReviewForm({ productId, onSuccess, onCancel }: ReviewFormProps) 
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
     if (!user) return;
-    if (rating === 0) {
-      toast({
-        title: "Error", 
-        description: "Please select a rating",
-        variant: "destructive",
-      });
-      return;
-    }
-    if (!title.trim() || !content.trim()) {
-      toast({
+
+    const trimmedContent = content.trim();
+    const trimmedTitle = title.trim();
+    const hasValidRating = rating >= 1 && rating <= 5;
+    const hasValidContent = trimmedContent.length > 0;
+
+    // Validation: At least rating or content must be provided
+    if (!hasValidRating && !hasValidContent) {
+      return toast({
         title: "Error",
-        description: "Please fill in all fields",
+        description: "Please provide either a star rating or review content.",
         variant: "destructive",
       });
-      return;
     }
 
-    createReviewMutation.mutate({
+    // Prepare review data according to backend expectations
+    const reviewData = {
       userId: user.id,
       productId,
-      rating,
-      title: title.trim(),
-      content: content.trim(),
-    });
+      rating: hasValidRating ? rating : 0, // Send 0 if no rating selected
+      title: trimmedTitle || " ", // Send space if empty
+      content: hasValidContent ? trimmedContent : " " // Send space if empty
+    };
+
+    console.log("Submitting review data:", reviewData);
+    createReviewMutation.mutate(reviewData);
   };
 
   return (
     <div className="bg-gray-50 rounded-lg p-6 mb-6">
       <h3 className="font-semibold mb-4">Write Your Review</h3>
       <form onSubmit={handleSubmit}>
+        {/* Rating stars */}
         <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 mb-2">Rating</label>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Rating (optional)
+          </label>
           <div className="flex space-x-1">
             {[1, 2, 3, 4, 5].map((star) => (
               <button
@@ -99,53 +98,67 @@ export function ReviewForm({ productId, onSuccess, onCancel }: ReviewFormProps) 
                 className="text-2xl transition-colors"
                 onMouseEnter={() => setHoverRating(star)}
                 onMouseLeave={() => setHoverRating(0)}
-                onClick={() => setRating(star)}
+                onClick={() => setRating(star === rating ? 0 : star)}
               >
-                <Star 
+                <Star
                   className={`h-6 w-6 ${
-                    star <= (hoverRating || rating) 
-                      ? "fill-secondary text-secondary" 
+                    star <= (hoverRating || rating)
+                      ? "fill-secondary text-secondary"
                       : "text-gray-300"
                   }`}
                 />
               </button>
             ))}
           </div>
+          {rating > 0 && (
+            <p className="text-sm text-gray-600 mt-1">
+              {rating} star{rating !== 1 ? 's' : ''} selected
+            </p>
+          )}
+          {rating === 0 && (
+            <p className="text-sm text-gray-500 mt-1">
+              No rating selected (will be saved as 0 stars)
+            </p>
+          )}
         </div>
-        
+
+        {/* Title (optional) */}
         <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 mb-2">Review Title</label>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Review Title (optional)
+          </label>
           <Input
             type="text"
-            placeholder="Summarize your review in one line"
+            placeholder="Summarize your review"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            required
           />
         </div>
-        
+
+        {/* Content (optional but at least rating or content required) */}
         <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 mb-2">Your Review</label>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Your Review (optional)
+          </label>
           <Textarea
             rows={4}
-            placeholder="Share your experience with this product..."
+            placeholder="Share your experience..."
             value={content}
             onChange={(e) => setContent(e.target.value)}
-            required
-            minLength={10}
           />
+          <p className="text-xs text-gray-500 mt-1">
+            * Please provide either a star rating or review content (or both)
+          </p>
         </div>
-        
+
+        {/* Submit & Cancel */}
         <div className="flex space-x-3">
-          <Button 
-            type="submit" 
-            disabled={createReviewMutation.isPending}
-          >
+          <Button type="submit" disabled={createReviewMutation.isPending}>
             {createReviewMutation.isPending ? "Submitting..." : "Submit Review"}
           </Button>
-          <Button 
-            type="button" 
-            variant="outline" 
+          <Button
+            type="button"
+            variant="outline"
             onClick={onCancel}
             disabled={createReviewMutation.isPending}
           >

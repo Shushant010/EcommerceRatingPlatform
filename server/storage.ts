@@ -126,21 +126,21 @@ export class DatabaseStorage implements IStorage {
       .returning();
     return review;
   }
+async getProductStats(productId: number): Promise<{ averageRating: number; reviewCount: number }> {
+  const [stats] = await db
+    .select({
+      averageRating: sql<number>`COALESCE(AVG(CASE WHEN ${reviews.rating} > 0 THEN ${reviews.rating} END), 0)`,
+      reviewCount: sql<number>`COUNT(${reviews.id})`,
+    })
+    .from(reviews)
+    .where(eq(reviews.productId, productId));
 
-  async getProductStats(productId: number): Promise<{ averageRating: number; reviewCount: number }> {
-    const [stats] = await db
-      .select({
-        averageRating: sql<number>`COALESCE(AVG(${reviews.rating}), 0)`,
-        reviewCount: sql<number>`COUNT(${reviews.id})`,
-      })
-      .from(reviews)
-      .where(eq(reviews.productId, productId));
+  return {
+    averageRating: Number(stats.averageRating) || 0,
+    reviewCount: Number(stats.reviewCount) || 0,
+  };
+}
 
-    return {
-      averageRating: Number(stats.averageRating) || 0,
-      reviewCount: Number(stats.reviewCount) || 0,
-    };
-  }
 }
 
 export const storage = new DatabaseStorage();
