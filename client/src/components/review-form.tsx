@@ -13,7 +13,7 @@ interface ReviewFormProps {
   onSuccess: () => void;
   onCancel: () => void;
 }
-
+// This component allows users to submit reviews for products, including optional ratings, titles, and content. It handles form submission, validation, and displays success or error messages using toast notifications. The review data is sent to the backend API, and the UI updates accordingly.
 export function ReviewForm({ productId, onSuccess, onCancel }: ReviewFormProps) {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -23,6 +23,15 @@ export function ReviewForm({ productId, onSuccess, onCancel }: ReviewFormProps) 
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
 
+  // Mutation to create a new review
+  // This mutation sends the review data to the backend API and handles success and error cases.
+  // On success, it invalidates relevant queries to refresh the product and review data.
+  // It also shows a success toast notification.
+  // On error, it shows an error toast notification with the error message.
+  // The review data includes user ID, product ID, rating, title, and content.
+  // The rating is optional, and if not provided, it defaults to 0.
+  // The title and content are also optional, and if not provided, they default to a space character.
+  // This ensures that the backend receives valid data even if the user does not provide
   const createReviewMutation = useMutation({
     mutationFn: async (reviewData: {
       userId: number;
@@ -81,6 +90,7 @@ export function ReviewForm({ productId, onSuccess, onCancel }: ReviewFormProps) 
     createReviewMutation.mutate(reviewData);
   };
 
+// This function handles the form submission for creating a review. It validates the input, prepares the review data, and calls the mutation to submit it to the backend.
   return (
     <div className="bg-gray-50 rounded-lg p-6 mb-6">
       <h3 className="font-semibold mb-4">Write Your Review</h3>
