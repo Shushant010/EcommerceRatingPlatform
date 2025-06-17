@@ -13,6 +13,8 @@ export function StarRating({ rating, size = "md", showNumber = false }: StarRati
     lg: "h-6 w-6",
   };
 
+  // Ensure rating is between 0 and 5
+  // full stars are 1-5, half stars are 0.5, and no stars is 0
   const stars = Array.from({ length: 5 }, (_, i) => {
     const starNumber = i + 1;
     const isFilled = starNumber <= Math.floor(rating);
