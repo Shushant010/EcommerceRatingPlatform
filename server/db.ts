@@ -6,6 +6,9 @@ import * as schema from "@shared/schema";
 neonConfig.webSocketConstructor = ws;
 
 // Using the specified connection string
+// postgres SQL connection string for NeonDB
+// Replace with your actual connection string
+// Example: "postgresql://username:password@host:port/database?sslmode=require
 
 const connectionString = "postgresql://neondb_owner:npg_UMHQueX7GLv1@ep-wispy-leaf-a1lyn8jv-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require";
 export const pool = new Pool({ connectionString });
