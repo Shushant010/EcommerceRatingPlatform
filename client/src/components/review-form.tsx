@@ -31,7 +31,7 @@ export function ReviewForm({ productId, onSuccess, onCancel }: ReviewFormProps) 
   // The review data includes user ID, product ID, rating, title, and content.
   // The rating is optional, and if not provided, it defaults to 0.
   // The title and content are also optional, and if not provided, they default to a space character.
-  // This ensures that the backend receives valid data even if the user does not provide
+  // This ensures that the backend receives valid data even if the user does not provide them.
   const createReviewMutation = useMutation({
     mutationFn: async (reviewData: {
       userId: number;
